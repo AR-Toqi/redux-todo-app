@@ -2,11 +2,12 @@
 import { useDispatch, useSelector } from "react-redux";
 import { toggleTodo, deleteTodo, editTodo  } from "../redux/actions";
 import { useState } from "react";
+import Swal from "sweetalert2"; // Import SweetAlert
 
 const TodoList = () => {
   const todos = useSelector((state) => state.todos);
   const dispatch = useDispatch();
-  
+
   const [editId, setEditId] = useState(null);
   const [editedText, setEditedText] = useState("");
 
@@ -15,17 +16,36 @@ const TodoList = () => {
       dispatch(editTodo(id, editedText));
       setEditId(null);
       setEditedText("");
+      Swal.fire("Edited!", "Your todo has been edited.", "success");
     }
   };
 
+  const confirmDelete = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(deleteTodo(id));
+        Swal.fire("Deleted!", "Your todo has been deleted.", "success");
+      }
+    });
+  };
 
   return (
     <ul className="list-group">
       {todos.map((todo) => (
-        <li  key={todo.id}
-        className={`list-group-item d-flex justify-content-between align-items-center ${
-          todo.completed ? "bg-success text-white" : ""
-        }`}>
+        <li
+          key={todo.id}
+          className={`list-group-item d-flex justify-content-between align-items-center ${
+            todo.completed ? "bg-success text-white" : ""
+          }`}
+        >
           <div>
             <input
               type="checkbox"
@@ -54,15 +74,18 @@ const TodoList = () => {
               </button>
             ) : (
               <button
-                onClick={() => setEditId(todo.id)}
-                className="btn btn-secondary btn-sm mr-4"
+                onClick={() => {
+                  setEditId(todo.id);
+                  setEditedText(todo.text); // Initialize editedText with existing text
+                }}
+                className="btn btn-primary btn-sm mr-2"
               >
                 Edit
               </button>
             )}
             <button
-              onClick={() => dispatch(deleteTodo(todo.id))}
-              className="btn btn-danger btn-sm mr-2"
+              onClick={() => confirmDelete(todo.id)}
+              className="btn btn-danger btn-sm"
             >
               Delete
             </button>
@@ -72,6 +95,5 @@ const TodoList = () => {
     </ul>
   );
 };
-
 
 export default TodoList;
